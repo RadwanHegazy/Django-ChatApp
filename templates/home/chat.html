@@ -1,0 +1,207 @@
+{% extends "home/home_base.html" %}
+{% load static %}
+
+{% block title %} Chat With {{friend}} {% endblock %}
+
+{% block container %}
+<div class="container">
+    <div class="right-side" style="width: 100%;">
+        <div class="send-op" id="view-more-side">
+            <button type="button" class="fas fa-image" id="ChooseImage"></button>
+            <i class="fas fa-times close-more" id="close"></i>
+        </div>
+
+        <div class="header">
+            <img width="70px" height="70px" src="{{friend.profile.image.url}}" alt="">
+            <p>{{friend}}</p>
+            {% if friend.profile.is_online %}
+                <span>online</span> 
+            {% else %}
+                <span class="of">offline</span>
+            {% endif %}
+        </div>
+
+        <style>
+            .mymsg{
+                background-color: #0099ff;
+                padding: 7px;
+                color: #fff;
+                font-weight: bold;
+            }
+            .from {
+                direction: rtl;
+                background-color: #f6f6f6;
+                padding: 7px;
+                float: right;
+                text-align: right;
+                font-weight: bold;
+            }
+
+        </style>
+        <div class="view-msg" id="ViewMsgs">
+    
+            <!-- msgs will seen here  -->
+    
+        </div>
+
+
+    
+        <!-- send msgs -->
+        <div class="send-msg">
+            <form id="SendMessage" style="width: 100%;">
+                {% csrf_token %}
+                <input type="text" id="message" required>
+                <div class="btns" id="SendMsg">
+                    <button type="submit">Send</button>
+                </div>
+            </form>
+            <form method="POST" enctype="multipart/form-data" id="SendImg">
+                {% csrf_token %}
+                <input name="image" type="file" accept="image/*" id="img" style="display: none;">
+                <button id="Sub" type="submit" style="display: none;"></button>
+                <button type="button" class="fas fa-icons image" id="view-more"></button>
+            </form>
+        </div>
+
+        <!-- end send msgs -->
+    
+        <script src="{% static 'js/jquery.min.js' %}"></script>
+        
+        <script>
+            $('#SendImg').on('submit',function(e){
+                e.preventDefault();
+
+                $form = $(this)
+                var formData = new FormData(this);
+
+                $.ajax({
+                    url:"{% url 'send_img' friend %}",
+                    type:"POST",
+                    data:formData,
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    success:function(done){
+                    },error:function(error){
+                    }
+                })
+
+
+                
+            })
+        </script>
+        <script>
+            var ViewAndClose = document.getElementById('view-more');
+            ViewAndClose.onclick = function(){
+                document.getElementById('view-more-side').classList.toggle('view');
+            }
+            document.getElementById('close').onclick = function(){
+                document.getElementById('view-more-side').classList.toggle('view');
+            }
+        </script>
+        <script> 
+            document.getElementById('message').onkeypress = function(){
+                document.getElementById('SendMsg').classList.add('view');
+            }
+
+            var imgInput = document.getElementById('img');
+            var imgBtn = document.getElementById('ChooseImage');
+
+            imgBtn.onclick = function(){
+                imgInput.click()
+            }
+
+            imgInput.onchange = function(){
+                document.getElementById('Sub').click()
+            }
+
+        </script>
+
+        <script>
+            setInterval(function(){
+
+                
+                var url = "{% url 'view_msgs' friend %}"
+                $.ajax({
+                    type:"GET",
+                    url:url,
+                    success:function(done){
+                        var userId = "{{user.id}}"
+                        var i;
+                        $('#ViewMsgs').empty()
+                        if (done.length === 0) {
+                            document.getElementById('ViewMsgs').innerHTML += 
+                            '<div class="alert alert-warning">There is no messages !</div>';
+                        }
+                        for (var i=0;i < done.length;i++){
+
+                            if (done[i]['from_user'] == userId){
+                                if (done[i]['msg']){
+                                    var InsertMsgs = `<p style='background:none;' class='mymsg'><label style='background:#0099ff;padding:11px;border-radius:8px'>${done[i]['msg']}</label></p>`
+                                    document.getElementById('ViewMsgs').innerHTML += InsertMsgs;
+                                }
+                                if (done[i]['img']){
+                                    var FromUserImage = `<div class='mymsg' style='width:300px;height:300px;background:transparent;'><img style='padding:5px;background:#0299ff;' src="/${done[i]['img']}" width='100%' height='100%'/></div>`
+                                    document.getElementById('ViewMsgs').innerHTML += FromUserImage;
+                                }
+                            }else {
+                                if (done[i]['msg']){
+                                    var InsertMsgs = `<p style='background:none;' class='from'><label style='background:#f6f6f6;padding:11px;border-radius:8px;'>${done[i]['msg']}</label></p>`
+                                    document.getElementById('ViewMsgs').innerHTML += InsertMsgs;
+                                }
+                                if (done[i]['img']){
+                                    var FromUserImage = `<div class='from' style='width:100%;height:auto;background:transparent;'><img style='padding:5px;background:#ddd;' src="/${done[i]['img']}" width='300px' height='300px'/></div>`
+                                    document.getElementById('ViewMsgs').innerHTML += FromUserImage;
+                                }
+                            }
+                        }
+                        
+                    },error:function(error){
+                        console.log("ERROR"+error)
+                    }
+                    
+                })
+
+                document.getElementById('ViewMsgs').scrollTo(0,document.getElementById('ViewMsgs').scrollHeight)
+
+
+            },1000)
+        </script>
+        
+        <script>
+
+            setInterval(function(){
+                var url = "{% url 'seen_msgs' friend %}"
+                $.ajax({
+                    type:"GET",
+                    url:url,
+                    success:function(e){
+                    },error:function(error){
+                    }
+                })
+            }
+,1000)
+            $('#SendMessage').on('submit',function(e){
+                e.preventDefault();
+                var msg = $('#message').val();
+                var url = "{% url 'send_msg' friend %}"
+                
+                $.ajax({
+                    type:"POST",
+                    url:url,
+                    data:{
+                        'csrfmiddlewaretoken':$('input[name=csrfmiddlewaretoken]').val(),
+                        'message':msg,
+                    },
+                    success:function(done){
+                        $('#message').val('')
+                    },error:function(error){
+                    }
+                })
+            })
+        </script>
+
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,83 @@
+{% extends "home/home_base.html" %}
+{% load static %}
+
+{% block title %} Search For Friends {% endblock %}
+
+
+{% block container %}
+<link rel="stylesheet" href="{% static 'css/search.css' %}">
+<div class="container">
+
+    <div class="page">
+
+        <div class="search">
+            <form>
+                <input type="text" name="q" id="" placeholder="Search For Friends">
+                <button class="fas fa-search" type="submit"></button>
+            </form>
+        </div>
+
+        <div class="line"></div>
+        {% if not users %}
+            <div class="alert alert-warning m-2">Sorry, We Can't find this user !</div>
+        {% endif %}
+
+        <div class="row m-2">
+            {% for i in users %}
+                <div class="col-lg-4">
+                    <div class="user">
+                        <img src="{{i.profile.image.url}}" alt="">
+                        <div class="info">
+                            <p>{{i.username}}</p>
+                            <p>{{i.profile.bio}}</p> 
+                        </div>
+                        {% if user in i.profile.friends.all %}
+                            <a href="#" class="fas fa-user-check send-req"></a>
+                        {% else %}
+                            <a href="{% url 'SendReq' i.username %}" class="fas fa-user-plus"></a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+
+
+{% endblock %}
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="home_chat.css">
+    <link rel="stylesheet" href="bootstrap.min.css">
+    <link rel="stylesheet" href="search.css">
+    <title>EgyChat</title>
+</head>
+<body style="background-color: #ddd;">
+    
+
+    
+    <div class="nv">
+        <div class="container">
+            <h1>EgyChat</h1>
+            <span>
+                {{user}}
+                <ul class="ul">
+                    <li><a href="{% url 'home' %}">Home</a></li>
+                    <li><a href="{% url 'search' %}">Search For Friends</a></li>
+                    <li><a href="#">Edit Profile</a></li>
+                    <li><a href="#">Change Password</a></li>
+                    <li><a href="{% url 'logout' %}">Logout</a></li>
+                </ul> 
+            </span>
+        </div>
+    </div>
+
+    
+</body>
+</html> -->

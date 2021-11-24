@@ -1,0 +1,182 @@
+{% extends "home/home_base.html" %}
+{% block title %} Home {% endblock %}
+{% load static %}
+
+{% block container %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-U1DAWAznBHeqEIlVSCgzq+c9gqGAJn5c/t99JyeKa9xxaYpSvHU5awsuZVVFIhvj" crossorigin="anonymous"></script>
+<style>
+    * {
+        outline: none;
+    }
+</style>
+<div class="container">
+    
+    <div class="left-side" style="width: 100%;">
+        <div class="row p-2">
+            <!-- search in user friends -->
+            <div class="col-lg-12"><div class="main" style="width: 100%;">
+                <label for="friends">Your Friends</label>
+                <!-- <input type="text" name="" id="friends"> -->
+                <div class="line"></div>
+
+                <!-- users -->
+                <ul class="nav nav-tabs" id="myTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                      <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">Friends</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                      <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">Rooms</button>
+                    </li>
+                  </ul>
+                  <div class="tab-content" id="myTabContent">
+                    <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab"><div class="view-all-users" id="all_user_friends">
+                        <h3>Please Wait ...</h3>
+    
+                    </div>
+                </div>
+                    <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+                        <div class="room">
+                            <div class="r">
+                                <img src="{{user.profile.image.url}}" alt="">
+                                <p class="text-muted">{{user}}</p>
+                            </div>
+                            <div class="l">
+                                <a href="{% url 'cr_room' %}" title="Create Room" class="fas fa-plus"></a>
+                            </div>
+                        </div>
+                        <hr>
+                        
+                        <div class="all-rooms" id="allRooms">
+                            <p class="alert alert-warning p-1">You aren't in any room</p>
+                        </div>
+                    </div>
+                  </div>
+                
+                <!-- end users -->
+
+            </div>
+        </div>
+            <!-- end search -->
+
+            <div class="col-lg-12">
+                <div class="main" style="width: 100%;">
+                <label for="">Friend Requests</label>
+                <div class="line"></div>
+                <div id="allUsers"><h2>Please Wait ...</h2></div>
+
+            </div></div>
+        </div>
+    </div>
+
+</div>
+
+<script src="{% static 'js/jquery.min.js' %}"></script>
+<script>
+
+    // view rooms 
+    setInterval(function(){
+        $.ajax({
+            type:"GET",
+            url:"{% url 'user_rooms' %}",
+            success:function(data){
+                $('#allRooms').empty()
+                var i;
+                if (data.length === 0) {
+                    document.getElementById('allRooms').innerHTML = "<p class='alert alert-warning p-1'>You aren't in any room </p>";
+                }else{
+                    for (i = 0;i<data.length;i++){
+                        var insertedData = `<a href='/room/${data[i]['name']}' class="room-a">
+                            <div class="r">
+                                <img src="${data[i]['img']}" alt="">
+                                <p class="text-primary">${data[i]['name']}</p>
+                            </div>
+                        </a>
+                        `;
+                        document.getElementById('allRooms').innerHTML += insertedData;
+                    }
+
+                }
+            },
+            error:function(error){
+                console.log('error', error)
+            }
+        })
+    },1000)
+
+    // view friends
+    setInterval(function(){
+        $.ajax({
+            type:"GET",
+            url:"{% url 'VFriends' %}",
+            success:function(e){
+                var user;
+                $('#all_user_friends').empty()
+                if (e.length == 0){
+                    document.getElementById('all_user_friends').innerHTML += "<p>You Don't Have Friends !, <a href='/search/'>Search for friends</a> </p>"
+                }
+                for (user=0;user < e.length;user++){
+                    var Users = `<a href="/${e[user][0]}/" class="user" id="user_fr-${user}">
+                        <img src="${e[user][1]}" width="50px" height="50px" alt="">
+                        <p>${e[user][0]}</p>
+                        <!-- <span class="online"></span> -->
+                        <span id='UserOff${user}' class="online offline"></span>
+                    </a>`
+                    document.getElementById('all_user_friends').innerHTML += Users;
+                    if (e[user][2] === true) {
+                        document.getElementById(`UserOff${user}`).classList.remove('offline');
+                    }
+                    if (e[user][3] !== 0) {
+                        document.getElementById(`user_fr-${user}`).innerHTML += 
+                        `<span class='noti'>${e[user][3]}</span>`;
+                    }
+                }
+
+            },error:function(error){
+                console.log(error)
+            }
+        })
+    },2000)
+
+
+    // view requested friends
+    setInterval(function(){
+        $.ajax({
+            type:"GET",
+            url:"{% url 'user_fr' %}",
+            success:function(e){
+                var i;
+                $('#allUsers').empty()
+                if (e.length == 0){
+                    document.getElementById('allUsers').innerHTML = '<h3> No Friend Requests </h3>';
+                }
+                for (i=0; i < e.length;++i){
+                    var Data = `<div class="user">
+                        <img src="${e[i][1]}" width="50px" height="50px" alt="">
+                        <p>${e[i][0]}</p>
+                        <div class="ans">
+                            <a href='/view/friends/add/${e[i][0]}' class="fas fa-check ok"></a>
+                            <a href='/view/friends/remove/${e[i][0]}' id='remove_User_Req' class="fas fa-times no"></a>
+                        </div>
+                    </div>`;
+                    document.getElementById('allUsers').innerHTML += Data;
+        
+                }
+                //console.log(e.length)
+            },
+            error:function(errr){
+                console.log(errr)
+            }
+        })
+    },1000)
+
+
+
+
+
+</script>
+{% endblock %}
+
+
+
+
+

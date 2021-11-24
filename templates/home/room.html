@@ -1,0 +1,206 @@
+{% extends "home/home_base.html" %}
+{% load static %}
+
+{% block title %} {{room}} {% endblock %}
+
+{% block container %}
+<div class="container">
+    <div class="right-side" style="width: 100%;">
+        <div class="send-op" id="view-more-side">
+            <button type="button" class="fas fa-image" id="ChooseImage"></button>
+            <i class="fas fa-times close-more" id="close"></i>
+        </div>
+
+        <div class="header">
+            <div class="img">
+                <img src="{{room.img.url}}" alt="">
+            </div>
+            <div style="position: relative;">
+                <p>{{room.name}}</p>
+                <!-- <button class="btn btn-primary btn-block" style="font-weight: bold;"><i class="fas fa-user"></i> {{room.users.all.count}} users</button> -->
+                <div class="btn-group">
+                    <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                      <i class="fas fa-user"></i> {{room.users.all.count}} users
+                    </button>
+                    <ul class="dropdown-menu">
+                        {% if user in room.admins.all %}
+                            <li><a class="dropdown-item" href="{% url 'room_set' room %}"><i class="fas fa-user-cog text-primary"></i> Room Settings</a> </li>
+                            <li><hr class="dropdown-divider"></li>
+                        {% endif %}
+                        {% for i in room.users.all %}
+                            {% if i.username == user.username and i == room.admin %}
+                                <li class="dropdown-item" style="cursor: pointer;"><img src="{{i.profile.image.url}}" width="25px" height="25px" style="border-radius: 50%" alt=""> {{i.username}} <small class="text-primary" >(Admin)</small></li>
+                            {% else %}
+                                {% if i == user %}
+                                    <li class="dropdown-item" style="cursor: pointer;"><img src="{{i.profile.image.url}}" width="25px" height="25px" style="border-radius: 50%" alt=""> {{i.username}} <small class="text-muted">(You)</small></li>
+                                {% else %}
+                                    {% if i in room.admins.all %}
+                                        <li><a class="dropdown-item" href="{% url 'chat' i.username %}" style="width: 100%;"><img src="{{i.profile.image.url}}" width="25px" height="25px" style="border-radius: 50%;" alt=""> {{i.username}} <small class="text-primary" >(Admin)</small></a></li>
+                                    {% else %}
+                                        <li><a class="dropdown-item" href="{% url 'chat' i.username %}" style="width: 100%;"><img src="{{i.profile.image.url}}" width="25px" height="25px" style="border-radius: 50%;" alt=""> {{i.username}}</a></li>
+                                    {% endif %}
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                  </div>
+            </div>
+        </div>
+
+        <style>
+            .mymsg{
+                background-color: #0099ff;
+                padding: 7px;
+                color: #fff;
+                font-weight: bold;
+            }
+            .from {
+                background-color: #f6f6f6;
+                padding: 7px;
+                float: right;
+                text-align: right;
+                font-weight: bold;
+            }
+        </style>
+        <div class="view-msg" id="ViewMsgs">
+    
+            <!-- msgs will seen here  -->
+            <div class="h3 m-1">Please Wait...</div>
+    
+        </div>
+
+
+    
+        <!-- send msgs -->
+        <div class="send-msg">
+            <form id="SendMessage" style="width: 100%;">
+                {% csrf_token %}
+                <input type="text" id="message" required>
+                <div class="btns" id="SendMsg">
+                    <button type="submit">Send</button>
+                </div>
+            </form>
+            <form  method="POST" enctype="multipart/form-data" id="SendImg">
+                {% csrf_token %}
+                <input name="image" type="file" accept="image/*" id="img" style="display: none;">
+                <button id="Sub" type="submit" style="display: none;"></button>
+                <button type="button" class="fas fa-icons image" id="view-more"></button>
+            </form>
+        </div>
+
+        <!-- end send msgs -->
+    
+        <script src="{% static 'js/jquery.min.js' %}"></script>
+
+        <script>
+            $('#SendImg').on('submit',function(e){
+                e.preventDefault();
+
+                $form = $(this)
+
+                var formData = new FormData(this)
+
+                $.ajax({
+                    type:"POST",
+                    url:"{% url 'room' room %}",
+                    data:formData,
+                    cache:false,
+                    contentType:false,
+                    processData:false,
+                })
+            })
+        </script>
+
+        <script>
+            var ViewAndClose = document.getElementById('view-more');
+            ViewAndClose.onclick = function(){
+                document.getElementById('view-more-side').classList.toggle('view');
+            }
+            document.getElementById('close').onclick = function(){
+                document.getElementById('view-more-side').classList.toggle('view');
+            }
+
+            document.getElementById('ChooseImage').onclick = function(){
+                document.getElementById('img').click();
+            }
+
+            document.getElementById('img').onchange = function(){
+                document.getElementById('Sub').click();
+            }
+
+        </script>
+        <script>
+            setInterval(function(){
+                $.ajax({
+                    type:"GET",
+                    url:"{% url 'VroomM' room.name %}",
+                    success:function(data) {
+                        $("#ViewMsgs").empty()
+                        if (data.length === 0){
+                            document.getElementById('ViewMsgs').innerHTML =
+                            "<div class='alert alert-warning'>There is no messages</div>";
+                        }
+                        
+                        for (var i=0;i<data.length;i++) {
+                            var userId = "{{ user.id }}"
+                            if (data[i]['from_user'] == userId){
+                                if (data[i]['msg']){
+                                    var insertedData = 
+                                    `<p class='mymsg' style='background:none;'><label style='background:#0099ff;padding:11px;border-radius:8px;'>${data[i]['msg']}</label></p>`;
+                                    document.getElementById('ViewMsgs').innerHTML += insertedData;
+                                }
+                                else if (data[i]['img']) {
+                                    var Image = `<p class='mymsg' style='background:none;'><img src='/${data[i]['img']}'  width='200px' height='200px' style='padding:7px;background-color:none;border:5px solid #0099ff'/></p>`
+                                    document.getElementById('ViewMsgs').innerHTML += Image;
+                                }
+                            }
+                            else {
+                                if (data[i]['msg']){
+                                    var insertedData = 
+                                    `<p class='from' style='background:none;'><label style='background:#f6f6f6;padding:11px;border-radius:8px;'>${data[i]['msg']}</label></p>`;
+                                    document.getElementById('ViewMsgs').innerHTML += insertedData;
+                                }
+                                else if (data[i]['img']) {
+                                    var Image = `<p class='from' style='background:none;'><img src='/${data[i]['img']}'  width='200px' height='200px' style='padding:7px;background-color:none;border:5px solid #f6f6f6'/></p>`
+                                    document.getElementById('ViewMsgs').innerHTML += Image;
+                                }
+                            
+                            }
+
+
+                        }document.getElementById('ViewMsgs').scrollTo(0,document.getElementById('ViewMsgs').scrollHeight)
+                    },
+                    error:function(error){
+                        console.log(error)
+                    }
+                })
+            },1000)
+
+
+            $('#SendMessage').on('submit',function(e){
+                e.preventDefault();
+
+                var room_name = "{{ room.name }}";
+                var msg = $('#message').val();
+
+                $.ajax({
+                    type:"POST",
+                    url:'{% url "msg_room"  %}',
+                    data:{
+                        'msg':msg,
+                        'room_name':room_name,
+                        'csrfmiddlewaretoken':$('input[name=csrfmiddlewaretoken]').val()
+                    },success:function(d){
+                        document.getElementById('message').value = "";
+                    },error:function(er){
+                        console.log(er)
+                    }
+                })
+
+            })
+        </script>
+
+    </div>
+</div>
+{% endblock %}
+

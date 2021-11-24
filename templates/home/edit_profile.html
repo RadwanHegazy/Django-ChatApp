@@ -1,0 +1,63 @@
+{% extends "home/home_base.html" %}
+{% load static %}
+
+{% block title %} Edit Profile {% endblock %}
+
+{% block container %}
+<link rel="stylesheet" href="{% static 'css/edit_profile.css' %}">
+<link rel="stylesheet" href="{% static 'css/search.css' %}">
+    <div class="container">
+        <div class="page">
+    
+            <div class="image">
+                <form action="{% url 'editImage' %}" method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <img src="{{user.profile.image.url}}" alt="">
+                    <input name="image" type="file" style="display: none;" id="image">
+                    <button class="fas fa-camera change" type="button" id="imaegBtn"></button>
+                    <button type="submit" style="display: block;" class="save" id="save">Save</button>
+                    <!-- <button id="save" class="save" type="submit"><i class="fas fa-save">Save </i> Save Photo</button> -->
+                </form>
+            </div>
+
+
+            <div class="details">
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="in">
+                        <label for="">Username</label>
+                        <input type="text" name="username" id="" value="{{user}}" required>
+                    </div>
+    
+                    <div class="in">
+                        <label for="">Email</label>
+                        <input type="email" name="email" id="" value="{{user.email}}" required>
+                    </div>
+    
+                    <div class="in">
+                        <label for="">Bio</label>
+                        <input type="text" name="bio" id="" value="{{user.profile.bio}}" required>
+                    </div>
+                    
+                    <button type="submit">Save Data</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        var ImageBtn = document.getElementById('imaegBtn');
+        var img = document.getElementById('image');
+
+        img.onchange = function(){
+
+            //document.getElementById('save').click()
+        }
+
+        ImageBtn.onclick = function(){
+            img.click()
+        }
+    </script>
+{% endblock %}

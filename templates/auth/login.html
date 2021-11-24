@@ -1,0 +1,33 @@
+{% extends "auth/auth_base.html" %}
+
+{% block title %} Login {% endblock %}
+{% block logo %} 
+    <div class="up"><p class="fas fa-user"></p><br></div>
+{% endblock %}
+
+
+{% block data %}
+    <form method="post" id="SubForm">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-danger">{{message}}</div>
+            {% endfor %}
+        {% endif %}
+        {% csrf_token %}
+        <div class="in">
+            <i class="fas fa-at"></i>
+            <input type="text" placeholder="Email" name="email" required>
+        </div>
+    
+        <div class="in">
+            <i class="fas fa-lock"></i>
+            <input type="password" placeholder="Password" name="password" required>
+        </div>
+    
+    
+        <div class="btns">
+            <button id="SubButton" type="submit">Login</button>
+            <p>New Here ? <a href="{% url 'signup' %}">Signup</a></p>
+        </div>
+    </form>
+{% endblock %}

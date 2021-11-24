@@ -1,0 +1,105 @@
+{% extends "home/home_base.html" %}
+{% load static %}
+
+{% block title %} {{room}} {% endblock %}
+
+{% block container %}
+<link rel="stylesheet" href="{% static 'css/edit_profile.css' %}">
+<link rel="stylesheet" href="{% static 'css/search.css' %}">
+    <div class="container">
+        <div class="page">
+    
+
+
+            <div class="m-auto" style="width: 100%;justify-content: space-around;text-align: center;">
+                <form action="." enctype="multipart/form-data" method="POST">
+                    {% csrf_token %}
+                    <img src="{{room.img.url}}" width="300px" height="300px" alt="" style="border-radius: 4px;box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.1);"><br>
+                    <input type="file" name="roomImage" id="img" style="display: none;">
+                    <div class="btns" style="width: 100%;margin-top: 15px;">
+                        <button id="ChangeBtn" type="button" class="btn btn-warning"><i class="fas fa-camera"></i> Change</button>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save</button>
+                    </div>
+                    <script>
+                        document.getElementById('ChangeBtn').onclick = function(){
+                            document.getElementById('img').click();
+                        }
+                    </script>
+                </form>
+            </div>
+            <div class="details">
+                <form method="POST" action=".">
+                    {% csrf_token %}
+                        <div class="in">
+                            <label for="">Name</label>
+                            <input type="text" name="roomName" value="{{room.name}}" id="" required>
+                        </div>
+        
+                        <div class="friends">
+                            <p >{{room.users.all.count}} Users</p>
+                            <p class="text-muted">Add Friends To room</p>
+                            <hr>
+    
+                            {% for i in user.profile.friends.all %}
+                                <div class="fr">
+                                    <img src="{{ i.profile.image.url }}" alt="">
+                                    <p>{{i}}</p>
+                                    {% if i == room.admin %}
+                                        <small class="text-danger">You Can't remove the admin</small>
+                                    {% else %}
+                                        {% if i in room.users.all %}
+                                            <input type="checkbox" name="users" checked value="{{ i }}">
+                                        {% else %}
+                                            <input type="checkbox" name="users" value="{{i}}">
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    <style>
+                        
+                    </style>
+                    
+                    <div class="friends">
+                        <p >{{room.admins.all.count}} Admin</p>
+                        <p class='text-muted'>Add Admins</p>
+                        <hr>
+                        {% for i in room.users.all %}
+                            <div class="fr">
+                                <img src="{{i.profile.image.url}}" alt="">
+                                <p>{{i}}</p>
+                                {% if i == room.admin %}
+                                    <small class="text-muted">admin and creator of this room</small>
+                                {% else %}
+                                {% if i == user %}
+                                    <small class="text-muted">  You</small>
+                                    {% else %}
+                                    {% if i in room.admins.all %}
+                                        <input type="checkbox" checked name="admins" value="{{i}}">
+                                    {% else  %}
+                                        <input type="checkbox" name="admins" value="{{i}}">
+                                    {% endif %}
+                                {% endif %}
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <button type="submit">Save</button>
+                </form>
+            </div>
+            {% if user == room.admin %}
+            <hr>
+                <form action="." method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" value="{{room}}" name="delete">
+                    <button class="btn btn-danger btn-block" type="submit" style="margin-top: 15px;"> Delete Room</button>
+                </form>
+            {% endif %}
+
+
+        </div>
+    </div>
+
+
+ 
+{% endblock %}

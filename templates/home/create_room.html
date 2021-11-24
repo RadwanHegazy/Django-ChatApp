@@ -1,0 +1,46 @@
+{% extends "home/home_base.html" %}
+{% load static %}
+
+{% block title %} Create Room {% endblock %}
+
+{% block container %}
+<link rel="stylesheet" href="{% static 'css/edit_profile.css' %}">
+<link rel="stylesheet" href="{% static 'css/search.css' %}">
+    <div class="container">
+        <div class="page">
+    
+
+
+            <div class="details">
+                <form method="POST">
+                    {% csrf_token %}
+                        <div class="in">
+                            <label for="">Name</label>
+                            <input type="text" name="roomName" id="" required>
+                        </div>
+        
+                        <div class="friends">
+                            <p class="text-muted">Add From Friends</p>
+                            <hr>
+                            {% for fr in friends %}
+                            <div class="fr">
+                                <input type="checkbox" name="users" value="{{fr}}">
+                                <img src="{{fr.profile.image.url}}" alt="">
+                                <p>{{fr}}</p>
+                            </div>
+                            {% endfor %}
+    
+                        </div>
+                    <style>
+                        
+                    </style>
+                    
+                    <button type="submit">Create</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+ 
+{% endblock %}
